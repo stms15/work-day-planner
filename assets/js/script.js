@@ -1,43 +1,67 @@
-// Wrap all code that interacts with the DOM in a call to jQuery to ensure that
-// the code isn't run until the browser has finished rendering all the elements
-// in the html.
+// ------ Functions ------ //
+
+function saveSchedule(event) {
+  var clickId = $(this).parent()[0].id;
+
+  for (let k = 0; k < textAreas.length; k++) {
+    if (textAreas[k].id == clickId) {
+      localStorage.setItem(textAreas[k].id, textAreas[k].value);
+    }
+  }
+}
+
+function textChange() {
+  var changeAtt = {
+    id: $(this).parent()[0].id,
+    value: $(this)[0].value,
+  };
+  var hourNum = changeAtt.id.replace("hour-", "");
+  textAreas[hourNum - 9] = changeAtt;
+}
+
+// ----------------------- //
+
+// --------- Main --------- //
+
+var textAreas = ["", "", "", "", "", "", "", "", ""];
+
 $(function () {
-  // TODO: Add a listener for click events on the save button. This code should
-  // use the id in the containing time-block as a key to save the user input in
-  // local storage. HINT: What does `this` reference in the click listener
-  // function? How can DOM traversal be used to get the "hour-x" id of the
-  // time-block containing the button that was clicked? How might the id be
-  // useful when saving the description in local storage?
-  //
-  
   var today = {
-    date: dayjs().format('dddd, MMMM D, YYYY'),
-    time24: dayjs().format('H'),
-    time12: dayjs().format('h a')
+    date: dayjs().format("dddd, MMMM D, YYYY"),
+    time24: dayjs().format("H"),
+    time12: dayjs().format("h a"),
   };
   var timeBlocks = [];
 
-  for (let i=9; i<=17; i++) {
+  for (let i = 9; i <= 17; i++) {
     elementId = "#hour-" + i.toString();
     timeBlocks.push($(elementId));
 
-    var index = i-9;
+    var index = i - 9;
     var dataNum = timeBlocks[index].data().number;
     if (dataNum < today.time24) {
-      timeBlocks[index].removeClass('future');
-      timeBlocks[index].addClass('past');
+      timeBlocks[index].removeClass("future");
+      timeBlocks[index].addClass("past");
     } else if (dataNum == today.time24) {
-      timeBlocks[index].removeClass('future');
-      timeBlocks[index].addClass('present');
-    } 
-    // else keep future class
-  }
-  
-  //
-  // TODO: Add code to get any user input that was saved in localStorage and set
-  // the values of the corresponding textarea elements. HINT: How can the id
-  // attribute of each time-block be used to do this?
-  //
+      timeBlocks[index].removeClass("future");
+      timeBlocks[index].addClass("present");
+    } // else keep future class
 
-  $('#currentDay').text(today.date);
+    // Add listener for each hour that uses the same function on click
+    var timeBlocksBttn = timeBlocks[index].children("button");
+    timeBlocksBttn.on("click", saveSchedule);
+
+    // Add on change listener for each hour's text area
+    var textAreaEl = timeBlocks[index].children("textarea");
+    textAreaEl.on("change", textChange);
+
+    // Set textareas with stored input
+    var storedKey = elementId.replace("#", "");
+    var storedData = localStorage.getItem(storedKey);
+    if (storedData !== null && storedData !== "") {
+      textAreaEl.val(storedData);
+    }
+  }
+
+  $("#currentDay").text(today.date);
 });
